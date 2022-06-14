@@ -28,4 +28,32 @@ namespace util {
         }
         return row;
     }
+
+
+    void convertObject(crow::json::wvalue& object, char type) {
+        const std::vector<std::string> courseObjCols = {
+            "convenor",
+            "requisites",
+            "additionalRequirements",
+            "courseWebLinks",
+            "class",
+            "assessment",
+            "belongsTo",
+        };
+        const std::vector<std::string> planObjCols = {
+            "school",
+            "planAccreditation",
+            "subjectBenchmark",
+            "modules",
+            "courseWeightings",
+            "degreeCalculationModel",
+        };
+        std::vector<std::string> columns = type == 'c' ? courseObjCols : planObjCols;
+        auto resRead = crow::json::load(object.dump());
+        for (auto &column: columns) {
+            if (object[column].t() != crow::json::type::Null) {
+                object[column] = crow::json::load(resRead[column].s());
+            }
+        }
+    }
 } // util

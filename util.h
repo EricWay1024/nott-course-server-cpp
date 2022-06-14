@@ -11,6 +11,7 @@
 namespace util {
     crow::json::wvalue select(SQLite::Statement&);
     crow::json::wvalue selectOne(SQLite::Statement&);
+    void convertObject(crow::json::wvalue&, char);
 } // util
 
 #endif //NOTTCOURSESERVER_UTIL_H
