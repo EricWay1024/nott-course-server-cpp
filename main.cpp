@@ -27,14 +27,35 @@ int main () {
             std::string code = req.url_params.get("code");
             SQLite::Statement query(db, "SELECT * FROM course WHERE code = ?");
             query.bind(1, code);
-            res = util::selectOne(query);
+            res = util::selectOne(query, 'c');
             if (res.t() == crow::json::type::Null) {
                 res["error"] = "No course found.";
-            } else {
-                util::convertObject(res, 'c');
             }
         }
         return res;
+    });
+
+    CROW_ROUTE(app, "/api/courses").methods("POST"_method)([&db](const crow::request& req){
+        auto reqBody = crow::json::load(req.body);
+        crow::json::wvalue res;
+        if (reqBody.has("codes")) {
+            auto codes = reqBody["codes"];
+            auto codeList = codes.lo();
+            std::stringstream os;
+            for (size_t i = 0; i < codeList.size(); i++) {
+                if (i > 0) {
+                    os << " UNION ";
+                }
+                os <<  "SELECT code, title, level, offering, credits, semester, assessment "
+                       "FROM course WHERE code = ?";
+            }
+            SQLite::Statement query(db, os.str());
+            for (size_t i = 0; i < codeList.size(); i++) {
+                query.bind(i + 1, codeList[i].s());
+            }
+            res = util::select(query, 'c');
+        }
+        return crow::json::wvalue(res);
     });
 
     CROW_ROUTE(app, "/api/plan")([&db](const crow::request& req){
@@ -42,7 +63,7 @@ int main () {
         if (req.url_params.get("code") == nullptr) {
             SQLite::Statement query(db, "SELECT degreeType, title, academicPlanCode, ucasCode "
                                         "FROM plan ORDER BY title");
-            res = util::select(query);
+            res = util::select(query, 'p');
 //            res["error"] = "No plan code was provided.";
         }
 
@@ -50,11 +71,9 @@ int main () {
             std::string code = req.url_params.get("code");
             SQLite::Statement query(db, "SELECT * FROM plan WHERE academicPlanCode = ?");
             query.bind(1, code);
-            res = util::selectOne(query);
+            res = util::selectOne(query, 'p');
             if (res.t() == crow::json::type::Null) {
                 res["error"] = "No plan found.";
-            } else {
-                util::convertObject(res, 'p');
             }
         }
         return res;
@@ -76,7 +95,7 @@ int main () {
             os << "code LIKE ? ";
             SQLite::Statement query(db, os.str());
             query.bind(1, reqBody["code"].s());
-            res = util::select(query);
+            res = util::select(query, 'c');
         }
 
         else if (reqBody.has("title")) {
@@ -84,7 +103,7 @@ int main () {
             os << "ORDER BY code";
             SQLite::Statement query(db, os.str());
             query.bind(1, "%" + (std::string)reqBody["title"].s() + "%");
-            res = util::select(query);
+            res = util::select(query, 'c');
         }
 
         else if (reqBody.has("credits") && reqBody.has("level") && reqBody.has("offering") && reqBody.has("semester")) {
@@ -115,7 +134,7 @@ int main () {
                 for (auto &u: valuesVec) query.bind(cnt++, u.s());
             }
 
-            res = util::select(query);
+            res = util::select(query, 'c');
         }
 
         else {
