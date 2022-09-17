@@ -64,7 +64,6 @@ int main () {
             SQLite::Statement query(db, "SELECT degreeType, title, academicPlanCode, ucasCode "
                                         "FROM plan ORDER BY title");
             res = util::select(query, 'p');
-//            res["error"] = "No plan code was provided.";
         }
 
         else {
@@ -76,6 +75,52 @@ int main () {
                 res["error"] = "No plan found.";
             }
         }
+        return res;
+    });
+
+    CROW_ROUTE(app, "/api/query/plan").methods("POST"_method)([&db](const crow::request& req){
+        crow::json::wvalue res;
+        auto reqBody = crow::json::load(req.body);
+
+        if (!reqBody) {
+            res["error"] = "No query was provided.";
+        }
+
+        std::ostringstream os;
+        os << "SELECT degreeType, title, academicPlanCode, ucasCode FROM plan WHERE ";
+
+        if (reqBody.has("code")) {
+            os << "academicPlanCode LIKE ? OR ucasCode LIKE ? ";
+            SQLite::Statement query(db, os.str());
+            for (int i = 1; i <= 2; i++) {
+                query.bind(i, "%" + (std::string)reqBody["code"].s() + "%");
+            }
+            res = util::select(query, 'p');
+        }
+
+        else if (reqBody.has("title") && reqBody.has("degreeType")) {
+            os << "title LIKE ? AND degreeType = ? ";
+            os << "ORDER BY title";
+            SQLite::Statement query(db, os.str());
+            query.bind(1, "%" + (std::string)reqBody["title"].s() + "%");
+            query.bind(2, reqBody["degreeType"].s());
+            res = util::select(query, 'p');
+        }
+
+        else if (reqBody.has("keyword")) {
+            os << "academicPlanCode LIKE ? OR ucasCode LIKE ? OR title LIKE ? ";
+            os << "ORDER BY title";
+            SQLite::Statement query(db, os.str());
+            for (int i = 1; i <= 3; i++) {
+                query.bind(i, "%" + (std::string)reqBody["keyword"].s() + "%");
+            }
+            res = util::select(query, 'p');
+        }
+
+        else {
+            res["error"] = "Wrong parameters. Please provide code or (title and degreeType).";
+        }
+
         return res;
     });
 
@@ -94,7 +139,7 @@ int main () {
         if (reqBody.has("code")) {
             os << "code LIKE ? ";
             SQLite::Statement query(db, os.str());
-            query.bind(1, reqBody["code"].s());
+            query.bind(1, "%" + (std::string)reqBody["code"].s() + "%");
             res = util::select(query, 'c');
         }
 
