@@ -11,14 +11,13 @@ int main () {
     SQLite::Database db("data.db", SQLite::OPEN_READONLY);
     crow::App<crow::CORSHandler> app;
     auto& cors = app.get_middleware<crow::CORSHandler>();
-    cors.global();
 
     CROW_ROUTE(app, "/")([](){
         return "Hello world";
     });
 
     CROW_ROUTE(app, "/api/course")([&db](const crow::request& req){
-        std::string campus = req.get_header_value("campus");
+        std::string campus = req.get_header_value("Authorization");
         if (campus.empty()) campus = "U";
 
         crow::json::wvalue res;
@@ -40,7 +39,7 @@ int main () {
     });
 
     CROW_ROUTE(app, "/api/courses").methods("POST"_method)([&db](const crow::request& req){
-        std::string campus = req.get_header_value("campus");
+        std::string campus = req.get_header_value("Authorization");
         if (campus.empty()) campus = "U";
 
         auto reqBody = crow::json::load(req.body);
@@ -67,7 +66,7 @@ int main () {
     });
 
     CROW_ROUTE(app, "/api/plan")([&db](const crow::request& req){
-        std::string campus = req.get_header_value("campus");
+        std::string campus = req.get_header_value("Authorization");
         if (campus.empty()) campus = "U";
 
         crow::json::wvalue res;
@@ -87,7 +86,7 @@ int main () {
     });
 
     CROW_ROUTE(app, "/api/query/plan").methods("POST"_method)([&db](const crow::request& req){
-        std::string campus = req.get_header_value("campus");
+        std::string campus = req.get_header_value("Authorization");
         if (campus.empty()) campus = "U";
 
         crow::json::wvalue res;
@@ -142,7 +141,7 @@ int main () {
 
 
     CROW_ROUTE(app, "/api/query/course").methods("POST"_method)([&db](const crow::request& req){
-        std::string campus = req.get_header_value("campus");
+        std::string campus = req.get_header_value("Authorization");
         if (campus.empty()) campus = "U";
 
         crow::json::wvalue res;
