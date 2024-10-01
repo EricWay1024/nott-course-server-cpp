@@ -7,21 +7,15 @@
 namespace util {
     std::vector<std::string> getObjCols(char type) {
         static std::vector<std::string> courseObjCols = {
-                "convenor",
                 "requisites",
+                "corequisites",
                 "additionalRequirements",
-                "courseWebLinks",
                 "class",
                 "assessment",
                 "belongsTo",
         };
         static std::vector<std::string> planObjCols = {
-                "school",
-                "planAccreditation",
-                "subjectBenchmark",
                 "modules",
-                "courseWeightings",
-                "degreeCalculationModel",
         };
         if (type == 'c') return courseObjCols;
         else return planObjCols;
