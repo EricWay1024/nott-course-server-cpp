@@ -22,6 +22,7 @@ git clone --recurse-submodules https://github.com/EricWay1024/nott-course-server
 Install `Crow`.
 
 ```bash
+sudo apt-get install build-essential libboost-all-dev
 wget https://github.com/CrowCpp/Crow/releases/download/v1.0%2B3/crow-v1.0+3.deb
 sudo apt install ./crow-v1.0+3.deb
 rm ./crow-v1.0+3.deb
